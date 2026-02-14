@@ -1,5 +1,4 @@
 local p = game.Players.LocalPlayer
-local assetId = _G.SavedID
 
 local function l(a, _)
     local b = Instance.new("Weld")
@@ -48,20 +47,30 @@ local function k(e, c)
     end
 end
 
--- Сама загрузка
-if assetId then
-    local char = p.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local success, result = pcall(function()
-            return game:GetObjects("rbxassetid://" .. assetId)
-        end)
+-- Сама загрузка с циклом и задержкой
+task.spawn(function()
+    while true do
+        task.wait(2) -- Ждем 2 секунды перед каждой проверкой
         
-        if success and type(result) == "table" and result[1] then
-            local model = result[1]
-            model.Name = "AngelicWings_Grib"
-            k(char, model)
-        else
-            warn("Не удалось загрузить ID: " .. tostring(assetId))
+        local assetId = _G.SavedID
+        local char = p.Character
+        
+        if assetId and char and char:FindFirstChild("HumanoidRootPart") then
+            if not char:FindFirstChild("AngelicWings_Grib") then
+                -- Небольшая пауза, чтобы убедиться, что всё прогрузилось
+                task.wait(0.5)
+                
+                local success, result = pcall(function()
+                    return game:GetObjects("rbxassetid://" .. assetId)
+                end)
+                
+                if success and type(result) == "table" and result[1] then
+                    local model = result[1]
+                    model.Name = "AngelicWings_Grib"
+                    k(char, model)
+                    print("Грибабас, вещь надета!")
+                end
+            end
         end
     end
-end
+end)
