@@ -1,6 +1,6 @@
 local p = game.Players.LocalPlayer
 
--- Функции сварки (твои оригинальные)
+-- Твои функции сварки
 local function l(a, _)
     local b = Instance.new("Weld")
     b.Part0 = a.Parent; b.Part1 = _.Parent; b.C0 = a.CFrame; b.C1 = _.CFrame; b.Parent = a.Parent
@@ -34,31 +34,36 @@ local function k(e, c)
     end
 end
 
--- Создаем глобальный список, если его еще нет
-if not _ENV.MyGribSkins then
-    _ENV.MyGribSkins = {}
+-- Инициализируем список в глобальной таблице _G
+if not _G.MyGribSkins then
+    _G.MyGribSkins = {}
 end
 
--- Если ID введен, добавляем его в список "хотелок"
+-- Если нажат Apply (есть SavedID), добавляем его в таблицу
 if _G.SavedID then
-    local alreadyIn = false
-    for _, id in pairs(_ENV.MyGribSkins) do
-        if id == _G.SavedID then alreadyIn = true break end
+    local id = tonumber(_G.SavedID)
+    local exists = false
+    for _, v in pairs(_G.MyGribSkins) do
+        if v == id then exists = true break end
     end
-    if not alreadyIn then
-        table.insert(_ENV.MyGribSkins, _G.SavedID)
+    if not exists then
+        table.insert(_G.MyGribSkins, id)
     end
 end
 
--- Запускаем цикл ПРОВЕРКИ только ОДИН раз за всю сессию
+-- Запускаем цикл, если он еще не запущен
 if not _G.SkinMasterLoopRunning then
     _G.SkinMasterLoopRunning = true
+    
     task.spawn(function()
         while true do
             local char = p.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
-                for _, id in pairs(_ENV.MyGribSkins) do
+                -- Проходим по всем накопленным ID
+                for _, id in pairs(_G.MyGribSkins) do
                     local skinName = "SkinID_" .. tostring(id)
+                    
+                    -- Если такой шмотки нет на персе - надеваем
                     if not char:FindFirstChild(skinName) then
                         pcall(function()
                             local objects = game:GetObjects("rbxassetid://" .. id)
@@ -71,7 +76,7 @@ if not _G.SkinMasterLoopRunning then
                     end
                 end
             end
-            task.wait(3)
+            task.wait(2) -- Проверка каждые 2 секунды
         end
     end)
 end
