@@ -1,7 +1,11 @@
 local player = game:GetService("Players").LocalPlayer
-local SavedInputID = "" 
+local id = _G.SavedID -- Берем ID, который ты ввел в меню
 
--- Функция приварки (универсальная)
+if not id then 
+    print("Грибабас, ID в _G.SavedID не найден!") 
+    return 
+end
+
 local function attachAccessory(character, accessory)
     accessory.Parent = character
     local handle = accessory:FindFirstChild("Handle") or accessory:FindFirstChildOfClass("Part") or accessory:FindFirstChildOfClass("MeshPart")
@@ -9,7 +13,6 @@ local function attachAccessory(character, accessory)
     if handle then
         local targetPart = character:FindFirstChild("HumanoidRootPart")
         if targetPart then
-            -- Чистим старые сварки, если есть
             for _, v in pairs(targetPart:GetChildren()) do
                 if v.Name == "AccessoryWeld" then v:Destroy() end
             end
@@ -25,59 +28,19 @@ local function attachAccessory(character, accessory)
     end
 end
 
--- Поле ввода
-Tabs.Extension:AddInput("AssetID", {
-    Title = "Custom Accessory ID",
-    Default = "",
-    Placeholder = "Введи ID и жми Apply...",
-    Numeric = true,
-    Finished = false,
-    Callback = function(Value)
-        SavedInputID = Value
-    end
-})
+local char = player.Character
+if char then
+    local old = char:FindFirstChild("VisualAccessory")
+    if old then old:Destroy() end
 
--- Кнопка активации
-Tabs.Extension:AddButton({
-    Title = "Apply Accessory",
-    Callback = function()
-        local id = tonumber(SavedInputID)
-        if not id then return print("Грибабас, ID введи!") end
-
-        local char = player.Character
-        if char then
-            -- Удаляем старую шмотку, если она уже висит
-            local old = char:FindFirstChild("VisualAccessory")
-            if old then old:Destroy() end
-
-            pcall(function()
-                local objects = game:GetObjects("rbxassetid://" .. id)
-                local item = objects[1]
-                
-                if item then
-                    item.Name = "VisualAccessory"
-                    attachAccessory(char, item)
-                    print("Шмотка " .. id .. " надета!")
-                else
-                    print("Ничего не нашлось по этому ID")
-                end
-            end)
-        end
-    end
-
-task.spawn(function()
-    player.CharacterAdded:Connect(function(char)
-        task.wait(2)
-        if SavedInputID ~= "" then
-            local id = tonumber(SavedInputID)
-            pcall(function()
-                local objects = game:GetObjects("rbxassetid://" .. id)
-                if objects[1] then
-                    objects[1].Name = "VisualAccessory"
-                    attachAccessory(char, objects[1])
-                end
-            end)
+    pcall(function()
+        local objects = game:GetObjects("rbxassetid://" .. id)
+        local item = objects[1]
+        
+        if item then
+            item.Name = "VisualAccessory"
+            attachAccessory(char, item)
+            print("Скин " .. id .. " применен через Гитхаб!")
         end
     end)
-end)
-
+end
