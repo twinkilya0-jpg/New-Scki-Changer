@@ -1,6 +1,5 @@
 local p = game.Players.LocalPlayer
 
--- Твои функции сварки
 local function l(a, _)
     local b = Instance.new("Weld")
     b.Part0 = a.Parent; b.Part1 = _.Parent; b.C0 = a.CFrame; b.C1 = _.CFrame; b.Parent = a.Parent
@@ -34,24 +33,21 @@ local function k(e, c)
     end
 end
 
--- Инициализируем список в глобальной таблице _G
 if not _G.MyGribSkins then
     _G.MyGribSkins = {}
 end
 
--- Если нажат Apply (есть SavedID), добавляем его в таблицу
 if _G.SavedID then
-    local id = tonumber(_G.SavedID)
+    local newId = tonumber(_G.SavedID)
     local exists = false
     for _, v in pairs(_G.MyGribSkins) do
-        if v == id then exists = true break end
+        if v == newId then exists = true break end
     end
     if not exists then
-        table.insert(_G.MyGribSkins, id)
+        table.insert(_G.MyGribSkins, newId)
     end
 end
 
--- Запускаем цикл, если он еще не запущен
 if not _G.SkinMasterLoopRunning then
     _G.SkinMasterLoopRunning = true
     
@@ -59,24 +55,26 @@ if not _G.SkinMasterLoopRunning then
         while true do
             local char = p.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
-                -- Проходим по всем накопленным ID
-                for _, id in pairs(_G.MyGribSkins) do
-                    local skinName = "SkinID_" .. tostring(id)
+                -- Перебираем все сохраненные ID
+                for i = 1, #_G.MyGribSkins do
+                    local currentId = _G.MyGribSkins[i]
+                    local skinName = "SkinID_" .. tostring(currentId)
                     
-                    -- Если такой шмотки нет на персе - надеваем
                     if not char:FindFirstChild(skinName) then
                         pcall(function()
-                            local objects = game:GetObjects("rbxassetid://" .. id)
+                            -- Запрашиваем конкретный ID
+                            local objects = game:GetObjects("rbxassetid://" .. currentId)
                             if objects and objects[1] then
                                 local item = objects[1]
                                 item.Name = skinName
                                 k(char, item)
                             end
                         end)
+                        task.wait(0.1) -- Небольшая пауза между шмотками
                     end
                 end
             end
-            task.wait(2) -- Проверка каждые 2 секунды
+            task.wait(2)
         end
     end)
 end
