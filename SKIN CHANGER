@@ -47,28 +47,40 @@ local function k(e, c)
     end
 end
 
--- Сама загрузка с циклом и задержкой
+-- Таблица для хранения всех ID, которые ты хочешь надеть
+if not _G.EquippedSkins then
+    _G.EquippedSkins = {}
+end
+
 task.spawn(function()
     while true do
-        task.wait(2) -- Ждем 2 секунды перед каждой проверкой
+        task.wait(2)
         
-        local assetId = _G.SavedID
+        local currentId = _G.SavedID
         local char = p.Character
         
-        if assetId and char and char:FindFirstChild("HumanoidRootPart") then
-            if not char:FindFirstChild("AngelicWings_Grib") then
-                -- Небольшая пауза, чтобы убедиться, что всё прогрузилось
-                task.wait(0.5)
+        if char and char:FindFirstChild("HumanoidRootPart") and currentId then
+            -- Добавляем текущий ID в список "надетых", если его там нет
+            if not _G.EquippedSkins[currentId] then
+                _G.EquippedSkins[currentId] = true
+            end
+
+            -- Проходим по всем ID, которые должны быть надеты
+            for id, isEnabled in pairs(_G.EquippedSkins) do
+                local uniqueName = "Skin_" .. tostring(id)
                 
-                local success, result = pcall(function()
-                    return game:GetObjects("rbxassetid://" .. assetId)
-                end)
-                
-                if success and type(result) == "table" and result[1] then
-                    local model = result[1]
-                    model.Name = "AngelicWings_Grib"
-                    k(char, model)
-                    print("Грибабас, вещь надета!")
+                if isEnabled and not char:FindFirstChild(uniqueName) then
+                    task.wait(0.2)
+                    local success, result = pcall(function()
+                        return game:GetObjects("rbxassetid://" .. id)
+                    end)
+                    
+                    if success and result and result[1] then
+                        local model = result[1]
+                        model.Name = uniqueName -- Уникальное имя для каждого ID
+                        k(char, model)
+                        print("Грибабас, акссесуар " .. id .. " надет!")
+                    end
                 end
             end
         end
