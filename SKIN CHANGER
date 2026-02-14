@@ -1,88 +1,63 @@
 local p = game.Players.LocalPlayer
-local assetId = _G.SavedID -- Теперь берем ID из твоего ввода
+[span_0](start_span)local assetId = _G.SavedID[span_0](end_span)
 
 if not assetId then return end
 
--- Функция очистки физики (чтобы не тепало)
-local function cleanPhysics(obj)
-    if obj:IsA("BasePart") then
-        obj.Anchored = false
-        obj.CanCollide = false
-        obj.CanTouch = false
-        obj.CanQuery = false
-        obj.Massless = true
-    end
-end
-
 local function l(a, _)
-    local b = Instance.new("Weld")
-    b.Part0 = a.Parent
-    b.Part1 = _.Parent
-    b.C0 = a.CFrame
-    b.C1 = _.CFrame
-    b.Parent = a.Parent
+    [span_1](start_span)local b = Instance.new("Weld")[span_1](end_span)
+    [span_2](start_span)b.Part0 = a.Parent[span_2](end_span)
+    [span_3](start_span)b.Part1 = _.Parent[span_3](end_span)
+    [span_4](start_span)b.C0 = a.CFrame[span_4](end_span)
+    [span_5](start_span)b.C1 = _.CFrame[span_5](end_span)
+    [span_6](start_span)b.Parent = a.Parent[span_6](end_span)
 end
 
 local function _weld(_, a, b, d, c, e)
-    local f = Instance.new("Weld")
-    f.Name = _
-    f.Part0 = b
-    f.Part1 = d
-    f.C0 = c
-    f.C1 = e
-    f.Parent = a
+    [span_7](start_span)local f = Instance.new("Weld")[span_7](end_span)
+    [span_8](start_span)f.Name = _[span_8](end_span)
+    [span_9](start_span)f.Part0 = b[span_9](end_span)
+    [span_10](start_span)f.Part1 = d[span_10](end_span)
+    [span_11](start_span)f.C0 = c[span_11](end_span)
+    [span_12](start_span)f.C1 = e[span_12](end_span)
+    [span_13](start_span)f.Parent = a[span_13](end_span)
 end
 
 local function findAtt(_, b)
-    for _, obj in pairs(_:GetChildren()) do
-        if obj:IsA("Attachment") and obj.Name == b then
-            return obj
-        elseif not obj:IsA("Accoutrement") and not obj:IsA("Tool") then
-            local res = findAtt(obj, b)
-            if res then return res end
+    [span_14](start_span)for _, obj in pairs(_:GetChildren()) do[span_14](end_span)
+        [span_15](start_span)if obj:IsA("Attachment") and obj.Name == b then[span_15](end_span)
+            [span_16](start_span)return obj[span_16](end_span)
+        [span_17](start_span)elseif not obj:IsA("Accoutrement") and not obj:IsA("Tool") then[span_17](end_span)
+            [span_18](start_span)local res = findAtt(obj, b)[span_18](end_span)
+            [span_19](start_span)if res then return res end[span_19](end_span)
         end
     end
 end
 
 local function k(e, c)
-    c.Parent = e
-    local d = c:FindFirstChild("Handle")
+    [span_20](start_span)c.Parent = e[span_20](end_span)
+    [span_21](start_span)local d = c:FindFirstChild("Handle")[span_21](end_span)
     if d then
-        cleanPhysics(d) -- Чистим физику главной детали
-        local b = d:FindFirstChildOfClass("Attachment")
+        [span_22](start_span)local b = d:FindFirstChildOfClass("Attachment")[span_22](end_span)
         if b then
-            local att = findAtt(e, b.Name)
-            if att then l(att, b) end
+            [span_23](start_span)local att = findAtt(e, b.Name)[span_23](end_span)
+            [span_24](start_span)if att then l(att, b) end[span_24](end_span)
         else
-            local head = e:FindFirstChild("Head")
+            [span_25](start_span)local head = e:FindFirstChild("Head")[span_25](end_span)
             if head then
-                _weld("HeadWeld", head, head, d, CFrame.new(0, 0.5, 0), c.AttachmentPoint)
+                _[span_26](start_span)weld("HeadWeld", head, head, d, CFrame.new(0, 0.5, 0), c.AttachmentPoint)[span_26](end_span)
             end
         end
     end
 end
 
--- Основная логика
 local char = p.Character
 if char and char:FindFirstChild("HumanoidRootPart") then
-    -- Удаляем старый скин, если он есть, чтобы не стакались
-    local old = char:FindFirstChild("CustomSkin_Grib")
-    if old then old:Destroy() end
-
-    local success, model = pcall(function()
-        return game:GetObjects("rbxassetid://" .. assetId)[1]
+    [span_27](start_span)local success, model = pcall(function()[span_27](end_span)
+        [span_28](start_span)return game:GetObjects("rbxassetid://" .. assetId)[1][span_28](end_span)
     end)
-
+    
     if success and model then
-        model.Name = "CustomSkin_Grib"
-        
-        -- Чистим физику всей модели
-        cleanPhysics(model)
-        for _, child in pairs(model:GetDescendants()) do
-            cleanPhysics(child)
-        end
-        
-        k(char, model)
-        print("Грибабас, шмотка " .. assetId .. " надета без багов!")
+        [span_29](start_span)model.Name = "AngelicWings_Grib"[span_29](end_span)
+        [span_30](start_span)k(char, model)[span_30](end_span)
     end
 end
