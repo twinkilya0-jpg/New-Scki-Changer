@@ -1,31 +1,21 @@
 local p = game.Players.LocalPlayer
 
+-- Функции сварки (твои оригинальные)
 local function l(a, _)
     local b = Instance.new("Weld")
-    b.Part0 = a.Parent
-    b.Part1 = _.Parent
-    b.C0 = a.CFrame
-    b.C1 = _.CFrame
-    b.Parent = a.Parent
+    b.Part0 = a.Parent; b.Part1 = _.Parent; b.C0 = a.CFrame; b.C1 = _.CFrame; b.Parent = a.Parent
 end
 
 local function _weld(_, a, b, d, c, e)
     local f = Instance.new("Weld")
-    f.Name = _
-    f.Part0 = b
-    f.Part1 = d
-    f.C0 = c
-    f.C1 = e
-    f.Parent = a
+    f.Name = _; f.Part0 = b; f.Part1 = d; f.C0 = c; f.C1 = e; f.Parent = a
 end
 
 local function findAtt(_, b)
     for _, obj in pairs(_:GetChildren()) do
-        if obj:IsA("Attachment") and obj.Name == b then
-            return obj
+        if obj:IsA("Attachment") and obj.Name == b then return obj
         elseif not obj:IsA("Accoutrement") and not obj:IsA("Tool") then
-            local res = findAtt(obj, b)
-            if res then return res end
+            local res = findAtt(obj, b); if res then return res end
         end
     end
 end
@@ -36,53 +26,52 @@ local function k(e, c)
     if d then
         local b = d:FindFirstChildOfClass("Attachment")
         if b then
-            local att = findAtt(e, b.Name)
-            if att then l(att, b) end
+            local att = findAtt(e, b.Name); if att then l(att, b) end
         else
             local head = e:FindFirstChild("Head")
-            if head then
-                _weld("HeadWeld", head, head, d, CFrame.new(0, 0.5, 0), c.AttachmentPoint)
-            end
+            if head then _weld("HeadWeld", head, head, d, CFrame.new(0, 0.5, 0), c.AttachmentPoint) end
         end
     end
 end
 
--- Таблица для хранения всех ID, которые ты хочешь надеть
-if not _G.EquippedSkins then
-    _G.EquippedSkins = {}
+-- Создаем глобальный список, если его еще нет
+if not _ENV.MyGribSkins then
+    _ENV.MyGribSkins = {}
 end
 
-task.spawn(function()
-    while true do
-        task.wait(2)
-        
-        local currentId = _G.SavedID
-        local char = p.Character
-        
-        if char and char:FindFirstChild("HumanoidRootPart") and currentId then
-            -- Добавляем текущий ID в список "надетых", если его там нет
-            if not _G.EquippedSkins[currentId] then
-                _G.EquippedSkins[currentId] = true
-            end
+-- Если ID введен, добавляем его в список "хотелок"
+if _G.SavedID then
+    local alreadyIn = false
+    for _, id in pairs(_ENV.MyGribSkins) do
+        if id == _G.SavedID then alreadyIn = true break end
+    end
+    if not alreadyIn then
+        table.insert(_ENV.MyGribSkins, _G.SavedID)
+    end
+end
 
-            -- Проходим по всем ID, которые должны быть надеты
-            for id, isEnabled in pairs(_G.EquippedSkins) do
-                local uniqueName = "Skin_" .. tostring(id)
-                
-                if isEnabled and not char:FindFirstChild(uniqueName) then
-                    task.wait(0.2)
-                    local success, result = pcall(function()
-                        return game:GetObjects("rbxassetid://" .. id)
-                    end)
-                    
-                    if success and result and result[1] then
-                        local model = result[1]
-                        model.Name = uniqueName -- Уникальное имя для каждого ID
-                        k(char, model)
-                        print("Грибабас, акссесуар " .. id .. " надет!")
+-- Запускаем цикл ПРОВЕРКИ только ОДИН раз за всю сессию
+if not _G.SkinMasterLoopRunning then
+    _G.SkinMasterLoopRunning = true
+    task.spawn(function()
+        while true do
+            local char = p.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                for _, id in pairs(_ENV.MyGribSkins) do
+                    local skinName = "SkinID_" .. tostring(id)
+                    if not char:FindFirstChild(skinName) then
+                        pcall(function()
+                            local objects = game:GetObjects("rbxassetid://" .. id)
+                            if objects and objects[1] then
+                                local item = objects[1]
+                                item.Name = skinName
+                                k(char, item)
+                            end
+                        end)
                     end
                 end
             end
+            task.wait(3)
         end
-    end
-end)
+    end)
+end
