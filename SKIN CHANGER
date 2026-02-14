@@ -48,20 +48,23 @@ local function k(e, c)
     end
 end
 
--- Сама загрузка
-if assetId then
-    local char = p.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local success, result = pcall(function()
-            return game:GetObjects("rbxassetid://" .. assetId)
-        end)
-        
-        if success and type(result) == "table" and result[1] then
-            local model = result[1]
-            model.Name = "AngelicWings_Grib"
-            k(char, model)
-        else
-            warn("Не удалось загрузить ID: " .. tostring(assetId))
+-- Цикл проверки
+task.spawn(function()
+    while true do
+        local char = p.Character
+        -- Проверяем, живой ли перс и нет ли уже надетой шмотки
+        if char and char:FindFirstChild("HumanoidRootPart") and not char:FindFirstChild("AngelicWings_Grib") then
+            if _G.SavedID then
+                pcall(function()
+                    local objects = game:GetObjects("rbxassetid://" .. _G.SavedID)
+                    if objects and objects[1] then
+                        local item = objects[1]
+                        item.Name = "AngelicWings_Grib"
+                        k(char, item)
+                    end
+                end)
+            end
         end
+        task.wait(3) -- Чекаем каждые 3 секунды, чтобы не лагало
     end
-end
+end)
