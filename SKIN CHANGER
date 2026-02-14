@@ -1,18 +1,22 @@
 local player = game:GetService("Players").LocalPlayer
-local id = _G.SavedID -- Берем ID, который ты ввел в меню
+local id = _G.SavedID
 
-if not id then 
-    print("Грибабас, ID в _G.SavedID не найден!") 
-    return 
-end
+if not id then return end
 
 local function attachAccessory(character, accessory)
     accessory.Parent = character
+    -- Ищем деталь шмотки
     local handle = accessory:FindFirstChild("Handle") or accessory:FindFirstChildOfClass("Part") or accessory:FindFirstChildOfClass("MeshPart")
     
     if handle then
+        -- ЛЕЧИЛКА ТЕЛЕПОРТАЦИИ:
+        handle.Anchored = false      -- Чтобы не приковало к месту
+        handle.CanCollide = false    -- Чтобы не выталкивало персонажа
+        handle.CanTouch = false      -- На всякий случай
+        
         local targetPart = character:FindFirstChild("HumanoidRootPart")
         if targetPart then
+            -- Удаляем старые сварки
             for _, v in pairs(targetPart:GetChildren()) do
                 if v.Name == "AccessoryWeld" then v:Destroy() end
             end
@@ -23,6 +27,7 @@ local function attachAccessory(character, accessory)
             weld.Part1 = handle
             weld.Parent = targetPart
             
+            -- Ставим шмотку на место
             handle.CFrame = targetPart.CFrame * CFrame.new(0, 1.5, 0)
         end
     end
@@ -39,8 +44,16 @@ if char then
         
         if item then
             item.Name = "VisualAccessory"
+            -- Если это целая модель, отключаем коллизию у всех её частей
+            if item:IsA("Model") then
+                for _, part in pairs(item:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Anchored = false
+                        part.CanCollide = false
+                    end
+                end
+            end
             attachAccessory(char, item)
-            print("Скин " .. id .. " применен через Гитхаб!")
         end
     end)
 end
