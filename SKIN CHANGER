@@ -2,19 +2,30 @@ local p = game.Players.LocalPlayer
 
 local function l(a, _)
     local b = Instance.new("Weld")
-    b.Part0 = a.Parent; b.Part1 = _.Parent; b.C0 = a.CFrame; b.C1 = _.CFrame; b.Parent = a.Parent
+    b.Part0 = a.Parent
+    b.Part1 = _.Parent
+    b.C0 = a.CFrame
+    b.C1 = _.CFrame
+    b.Parent = a.Parent
 end
 
 local function _weld(_, a, b, d, c, e)
     local f = Instance.new("Weld")
-    f.Name = _; f.Part0 = b; f.Part1 = d; f.C0 = c; f.C1 = e; f.Parent = a
+    f.Name = _
+    f.Part0 = b
+    f.Part1 = d
+    f.C0 = c
+    f.C1 = e
+    f.Parent = a
 end
 
 local function findAtt(_, b)
     for _, obj in pairs(_:GetChildren()) do
-        if obj:IsA("Attachment") and obj.Name == b then return obj
+        if obj:IsA("Attachment") and obj.Name == b then
+            return obj
         elseif not obj:IsA("Accoutrement") and not obj:IsA("Tool") then
-            local res = findAtt(obj, b); if res then return res end
+            local res = findAtt(obj, b)
+            if res then return res end
         end
     end
 end
@@ -25,56 +36,41 @@ local function k(e, c)
     if d then
         local b = d:FindFirstChildOfClass("Attachment")
         if b then
-            local att = findAtt(e, b.Name); if att then l(att, b) end
+            local att = findAtt(e, b.Name)
+            if att then l(att, b) end
         else
             local head = e:FindFirstChild("Head")
-            if head then _weld("HeadWeld", head, head, d, CFrame.new(0, 0.5, 0), c.AttachmentPoint) end
+            if head then
+                _weld("HeadWeld", head, head, d, CFrame.new(0, 0.5, 0), c.AttachmentPoint)
+            end
         end
     end
 end
 
-if not _G.MyGribSkins then
-    _G.MyGribSkins = {}
-end
-
-if _G.SavedID then
-    local newId = tonumber(_G.SavedID)
-    local exists = false
-    for _, v in pairs(_G.MyGribSkins) do
-        if v == newId then exists = true break end
-    end
-    if not exists then
-        table.insert(_G.MyGribSkins, newId)
-    end
-end
-
-if not _G.SkinMasterLoopRunning then
-    _G.SkinMasterLoopRunning = true
-    
-    task.spawn(function()
-        while true do
-            local char = p.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                -- Перебираем все сохраненные ID
-                for i = 1, #_G.MyGribSkins do
-                    local currentId = _G.MyGribSkins[i]
-                    local skinName = "SkinID_" .. tostring(currentId)
-                    
-                    if not char:FindFirstChild(skinName) then
-                        pcall(function()
-                            -- Запрашиваем конкретный ID
-                            local objects = game:GetObjects("rbxassetid://" .. currentId)
-                            if objects and objects[1] then
-                                local item = objects[1]
-                                item.Name = skinName
-                                k(char, item)
-                            end
-                        end)
-                        task.wait(0.1) -- Небольшая пауза между шмотками
-                    end
+-- Сама загрузка с циклом и задержкой
+task.spawn(function()
+    while true do
+        task.wait(2) -- Ждем 2 секунды перед каждой проверкой
+        
+        local assetId = _G.SavedID
+        local char = p.Character
+        
+        if assetId and char and char:FindFirstChild("HumanoidRootPart") then
+            if not char:FindFirstChild("AngelicWings_Grib") then
+                -- Небольшая пауза, чтобы убедиться, что всё прогрузилось
+                task.wait(0.5)
+                
+                local success, result = pcall(function()
+                    return game:GetObjects("rbxassetid://" .. assetId)
+                end)
+                
+                if success and type(result) == "table" and result[1] then
+                    local model = result[1]
+                    model.Name = "AngelicWings_Grib"
+                    k(char, model)
+                    print("Грибабас, вещь надета!")
                 end
             end
-            task.wait(2)
         end
-    end)
-end
+    end
+end)
