@@ -1,5 +1,6 @@
 local p = game.Players.LocalPlayer
 
+-- Функции сварки и поиска (оставляем, они топ)
 local function l(a, _)
     local b = Instance.new("Weld")
     b.Part0 = a.Parent
@@ -47,19 +48,20 @@ local function k(e, c)
     end
 end
 
-_G.ApplySkinWyrm = function()
-    local assetId = _G.SavedID
-    local char = p.Character
+-- ТЕЛО СКРИПТА (БЕЗ ЦИКЛА WHILE!)
+local assetId = _G.SavedID
+local char = p.Character
+
+if assetId and char then
+    local success, result = pcall(function()
+        return game:GetObjects("rbxassetid://" .. assetId)
+    end)
     
-    if assetId and char then
-        local success, result = pcall(function()
-            return game:GetObjects("rbxassetid://" .. assetId)
-        end)
-        
-        if success and result and result[1] then
-            local model = result[1]
-            model.Name = "WyrmEquipped_" .. math.random(1, 99999)
-            k(char, model)
-        end
+    if success and result and result[1] then
+        local model = result[1]
+        -- ВОТ ТУТ СЕКРЕТ: Каждая вещь получает уникальное имя
+        model.Name = "BlackWyrmItem_" .. math.random(1, 100000)
+        k(char, model)
+        print("Wyrm: Предмет " .. assetId .. " успешно наслоен!")
     end
 end
