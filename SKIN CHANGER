@@ -1,67 +1,92 @@
 local p = game.Players.LocalPlayer
+_G.SavedAccessories = _G.SavedAccessories or {} -- Таблица для хранения твоих ID
 
--- Функции сварки и поиска (оставляем, они топ)
-local function l(a, _)
-    local b = Instance.new("Weld")
-    b.Part0 = a.Parent
-    b.Part1 = _.Parent
-    b.C0 = a.CFrame
-    b.C1 = _.CFrame
-    b.Parent = a.Parent
+local function weldParts(a, b)
+    local weld = Instance.new("Weld")
+    weld.Part0 = a.Parent
+    weld.Part1 = b.Parent
+    weld.C0 = a.CFrame
+    weld.C1 = b.CFrame
+    weld.Parent = a.Parent
 end
 
-local function _weld(_, a, b, d, c, e)
-    local f = Instance.new("Weld")
-    f.Name = _
-    f.Part0 = b
-    f.Part1 = d
-    f.C0 = c
-    f.C1 = e
-    f.Parent = a
-end
-
-local function findAtt(_, b)
-    for _, obj in pairs(_:GetChildren()) do
-        if obj:IsA("Attachment") and obj.Name == b then
+local function findAtt(parent, name)
+    for _, obj in pairs(parent:GetChildren()) do
+        if obj:IsA("Attachment") and obj.Name == name then
             return obj
         elseif not obj:IsA("Accoutrement") and not obj:IsA("Tool") then
-            local res = findAtt(obj, b)
+            local res = findAtt(obj, name)
             if res then return res end
         end
     end
 end
 
+-- Функция очистки хитбоксов и надевания
 local function k(e, c)
     c.Parent = e
+    for _, part in pairs(c:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+            part.CanTouch = false
+            part.CanQuery = false
+            part.Massless = true -- Чтобы шмотки не тянули вниз
+        end
+    end
+    
     local d = c:FindFirstChild("Handle")
     if d then
         local b = d:FindFirstChildOfClass("Attachment")
         if b then
             local att = findAtt(e, b.Name)
-            if att then l(att, b) end
+            if att then weldParts(att, b) end
         else
             local head = e:FindFirstChild("Head")
             if head then
-                _weld("HeadWeld", head, head, d, CFrame.new(0, 0.5, 0), c.AttachmentPoint)
+                local f = Instance.new("Weld")
+                f.Name = "HeadWeld"
+                f.Part0 = head; f.Part1 = d
+                f.C0 = CFrame.new(0, 0.5, 0); f.C1 = c.AttachmentPoint
+                f.Parent = head
             end
         end
     end
 end
 
--- ТЕЛО СКРИПТА (БЕЗ ЦИКЛА WHILE!)
-local assetId = _G.SavedID
-local char = p.Character
+-- Функция для надевания всех сохраненных вещей
+local function ReapplySkins()
+    local char = p.Character or p.CharacterAdded:Wait()
+    task.wait(1) -- Ждем прогрузки персонажа игрой
+    for id, _ in pairs(_G.SavedAccessories) do
+        local success, result = pcall(function()
+            return game:GetObjects("rbxassetid://" .. id)
+        end)
+        if success and result[1] then
+            local model = result[1]
+            model.Name = "WyrmSkin_" .. id
+            k(char, model)
+        end
+    end
+end
 
-if assetId and char then
+-- Основная логика при нажатии кнопки
+local assetId = _G.SavedID
+if assetId and p.Character then
+    -- Сохраняем ID в таблицу "бессмертия"
+    _G.SavedAccessories[assetId] = true
+    
     local success, result = pcall(function()
         return game:GetObjects("rbxassetid://" .. assetId)
     end)
     
-    if success and result and result[1] then
+    if success and result[1] then
         local model = result[1]
-        -- ВОТ ТУТ СЕКРЕТ: Каждая вещь получает уникальное имя
-        model.Name = "BlackWyrmItem_" .. math.random(1, 100000)
-        k(char, model)
-        print("Wyrm: Предмет " .. assetId .. " успешно наслоен!")
+        model.Name = "WyrmSkin_" .. assetId
+        k(p.Character, model)
     end
+end
+
+-- Авто-надевание после смерти/раунда (запускаем один раз)
+if not _G.SkinInited then
+    _G.SkinInited = true
+    p.CharacterAdded:Connect(ReapplySkins)
 end
